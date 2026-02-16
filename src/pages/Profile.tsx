@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { updateUserProfile } from '@/services/authService';
 import AppLayout from '@/components/AppLayout';
+import ProfilePictureUpload from '@/components/ProfilePictureUpload';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { User as UserIcon, Save, Loader2 } from 'lucide-react';
+import { User as UserIcon, Save, Loader2, Edit, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const branches = ['Computer Science', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'Information Technology'];
@@ -16,15 +17,29 @@ const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({ 
     name: user?.name || '', 
     email: user?.email || '', 
+    college_name: user?.college_name || '',
     class_name: user?.class_name || '', 
     year: user?.year?.toString() || '',
     bio: user?.bio || ''
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const handleCancel = () => {
+    setForm({
+      name: user?.name || '', 
+      email: user?.email || '', 
+      college_name: user?.college_name || '',
+      class_name: user?.class_name || '', 
+      year: user?.year?.toString() || '',
+      bio: user?.bio || ''
+    });
+    setIsEditing(false);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +61,7 @@ const Profile = () => {
 
       if (response.success && response.data) {
         updateUser(response.data);
+        setIsEditing(false);
         toast({ title: 'Profile updated successfully!' });
       } else {
         toast({ 
@@ -66,6 +82,16 @@ const Profile = () => {
     }
   };
 
+  const handleProfilePictureUpload = async (file: File) => {
+    // TODO: Implement actual file upload to backend
+    console.log('Upload profile picture:', file);
+    // For now, this is a placeholder
+    toast({
+      title: 'Feature Coming Soon',
+      description: 'Profile picture upload will be available soon!',
+    });
+  };
+
   if (!user) {
     return (
       <AppLayout>
@@ -80,94 +106,163 @@ const Profile = () => {
     <AppLayout>
       <div className="max-w-2xl mx-auto space-y-6">
         <Card className="border-border">
-          <CardContent className="flex items-center gap-5 p-6">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary text-2xl font-bold">
-              {user.name?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-foreground">{user.name}</h2>
-              <p className="text-muted-foreground">{user.email}</p>
-              <p className="text-sm text-muted-foreground">
-                {user.class_name || 'No class'} {user.year && `• ${user.year}`}
-              </p>
-              {user.college_name && (
-                <p className="text-sm text-muted-foreground">{user.college_name}</p>
+          <CardContent className="flex flex-col sm:flex-row items-center gap-6 p-6">
+            <ProfilePictureUpload
+              currentPicture={user?.profile_picture}
+              userName={user?.name || 'User'}
+              onUpload={handleProfilePictureUpload}
+              disabled={loading}
+            />
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-xl font-bold text-foreground">{user?.name}</h2>
+              <p className="text-muted-foreground">{user?.email}</p>
+              {user?.college_name && (
+                <p className="text-sm text-muted-foreground mt-1">{user.college_name}</p>
               )}
+              <p className="text-sm text-muted-foreground">
+                {user?.class_name || 'No class'} {user?.year && `• ${user.year}`}
+              </p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-border">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserIcon className="h-5 w-5 text-primary" /> Edit Profile
-            </CardTitle>
-            <CardDescription>Update your personal information</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <UserIcon className="h-5 w-5 text-primary" /> 
+                  {isEditing ? 'Edit Profile' : 'Profile Information'}
+                </CardTitle>
+                <CardDescription>
+                  {isEditing ? 'Update your personal information' : 'View your profile details'}
+                </CardDescription>
+              </div>
+              {!isEditing && (
+                <Button variant="outline" onClick={() => setIsEditing(true)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSave} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input 
-                  id="name" 
-                  value={form.name} 
-                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                  disabled={loading}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" value={form.email} disabled className="opacity-60" />
-                <p className="text-xs text-muted-foreground">Email cannot be changed</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+            {isEditing ? (
+              <form onSubmit={handleSave} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Branch/Class</Label>
-                  <Select 
-                    value={form.class_name} 
-                    onValueChange={(v) => setForm((p) => ({ ...p, class_name: v }))}
+                  <Label htmlFor="name">Name *</Label>
+                  <Input 
+                    id="name" 
+                    value={form.name} 
+                    onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                     disabled={loading}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
-                    <SelectContent>
-                      {branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label>Year</Label>
-                  <Select 
-                    value={form.year} 
-                    onValueChange={(v) => setForm((p) => ({ ...p, year: v }))}
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" value={form.email} disabled className="opacity-60" />
+                  <p className="text-xs text-muted-foreground">Email cannot be changed</p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="college_name">College / Institution Name</Label>
+                  <Input 
+                    id="college_name" 
+                    value={form.college_name} 
+                    onChange={(e) => setForm((p) => ({ ...p, college_name: e.target.value }))}
+                    placeholder="e.g., ABC Engineering College"
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-muted-foreground">Contact support to update your registered college</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Branch/Class</Label>
+                    <Select 
+                      value={form.class_name} 
+                      onValueChange={(v) => setForm((p) => ({ ...p, class_name: v }))}
+                      disabled={loading}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
+                      <SelectContent>
+                        {branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Year</Label>
+                    <Select 
+                      value={form.year} 
+                      onValueChange={(v) => setForm((p) => ({ ...p, year: v }))}
+                      disabled={loading}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
+                      <SelectContent>
+                        {years.map((y) => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bio">Bio</Label>
+                  <Textarea 
+                    id="bio" 
+                    value={form.bio} 
+                    onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
+                    placeholder="Tell us about yourself..."
+                    rows={4}
+                    disabled={loading}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={loading}>
+                    {loading ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
+                    ) : (
+                      <><Save className="h-4 w-4 mr-2" /> Save Changes</>
+                    )}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleCancel}
                     disabled={loading}
                   >
-                    <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
-                    <SelectContent>
-                      {years.map((y) => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                    <X className="h-4 w-4 mr-2" />
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-muted-foreground">Name</Label>
+                  <p className="text-foreground font-medium">{user?.name || 'Not provided'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Email</Label>
+                  <p className="text-foreground font-medium">{user?.email || 'Not provided'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">College / Institution</Label>
+                  <p className="text-foreground font-medium">{user?.college_name || 'Not provided'}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Branch/Class</Label>
+                    <p className="text-foreground font-medium">{user?.class_name || 'Not provided'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Year</Label>
+                    <p className="text-foreground font-medium">{user?.year || 'Not provided'}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Bio</Label>
+                  <p className="text-foreground">{user?.bio || 'No bio provided'}</p>
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea 
-                  id="bio" 
-                  value={form.bio} 
-                  onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
-                  placeholder="Tell us about yourself..."
-                  rows={4}
-                  disabled={loading}
-                />
-              </div>
-              <Button type="submit" disabled={loading}>
-                {loading ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving...</>
-                ) : (
-                  <><Save className="h-4 w-4 mr-2" /> Save Changes</>
-                )}
-              </Button>
-            </form>
+            )}
           </CardContent>
         </Card>
       </div>

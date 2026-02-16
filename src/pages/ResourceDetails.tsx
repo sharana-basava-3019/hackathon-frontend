@@ -4,6 +4,7 @@ import { mockResources, mockComments } from '@/data/mockData';
 import { mockUser } from '@/data/mockData';
 import type { Comment } from '@/types';
 import AppLayout from '@/components/AppLayout';
+import ResourceCard from '@/components/ResourceCard';
 import ErrorMessage from '@/components/ErrorMessage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,12 @@ const ResourceDetails = () => {
   const [userRating, setUserRating] = useState(0);
   const [bookmarked, setBookmarked] = useState(resource?.bookmarked ?? false);
   const { toast } = useToast();
+
+  const relatedResources = resource
+    ? mockResources
+        .filter(r => r.id !== resource.id && (r.subject === resource.subject || r.branch === resource.branch))
+        .slice(0, 3)
+    : [];
 
   if (!resource) return <AppLayout><ErrorMessage message="Resource not found" /></AppLayout>;
 
@@ -73,10 +80,20 @@ const ResourceDetails = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-foreground">{resource.description}</p>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">{resource.branch}</Badge>
-              <Badge variant="secondary">Semester {resource.semester}</Badge>
-              <Badge variant="outline" className="capitalize">{resource.type}</Badge>
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="secondary">{resource.branch}</Badge>
+                <Badge variant="secondary">Semester {resource.semester}</Badge>
+                <Badge variant="outline" className="capitalize">{resource.type}</Badge>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground mb-1">Tags</p>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="text-xs">{resource.subject}</Badge>
+                  <Badge variant="outline" className="text-xs">{resource.branch}</Badge>
+                  <Badge variant="outline" className="text-xs">Sem {resource.semester}</Badge>
+                </div>
+              </div>
             </div>
             <Separator />
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
@@ -109,7 +126,7 @@ const ResourceDetails = () => {
         <Card className="border-border">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="h-5 w-5 text-primary" /> Comments ({comments.length})
+              <FileText className="h-5 w-5 text-primary" /> Reviews & Comments ({comments.length})
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -134,6 +151,25 @@ const ResourceDetails = () => {
                     </div>
                     <p className="text-sm text-foreground pl-8">{c.content}</p>
                   </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText className="h-5 w-5 text-primary" /> Related Resources
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {relatedResources.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No related resources found yet.</p>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {relatedResources.map(r => (
+                  <ResourceCard key={r.id} resource={r} />
                 ))}
               </div>
             )}

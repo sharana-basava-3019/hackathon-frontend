@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   LayoutDashboard,
   Upload,
@@ -16,7 +17,7 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/dashboard', label: 'Home', icon: LayoutDashboard },
   { path: '/upload', label: 'Upload', icon: Upload },
   { path: '/resources', label: 'Browse', icon: Search },
   { path: '/my-uploads', label: 'My Uploads', icon: FolderOpen },
@@ -64,9 +65,12 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </nav>
         <div className="border-t border-border p-4">
           <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-sm">
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
+            <Avatar className="h-9 w-9">
+              <AvatarImage src={user?.profile_picture || undefined} alt={user?.name} />
+              <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
+                {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{user?.name || 'User'}</p>
               <p className="text-xs text-muted-foreground truncate">{user?.email || ''}</p>
@@ -85,17 +89,39 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <GraduationCap className="h-6 w-6 text-primary" />
           <span className="font-bold text-foreground">CampusShare</span>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
-          {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user?.profile_picture || undefined} alt={user?.name} />
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <Button variant="ghost" size="icon" onClick={() => setMobileOpen(!mobileOpen)}>
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </header>
 
       {/* Mobile nav overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-foreground/20" onClick={() => setMobileOpen(false)} />
-          <div className="absolute left-0 top-0 h-full w-64 bg-card border-r border-border p-4 pt-16">
-            <nav className="space-y-1">
+          <div className="absolute left-0 top-0 h-full w-64 bg-card border-r border-border flex flex-col">
+            <div className="p-4 pt-16 border-b border-border">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={user?.profile_picture || undefined} alt={user?.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                    {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{user?.name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email || ''}</p>
+                </div>
+              </div>
+            </div>
+            <nav className="space-y-1 p-4 flex-1 overflow-y-auto">
               {navItems.map(({ path, label, icon: Icon }) => {
                 const active = location.pathname === path;
                 return (
@@ -115,7 +141,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
                 );
               })}
             </nav>
-            <div className="mt-6 pt-4 border-t border-border">
+            <div className="p-4 border-t border-border">
               <Button variant="outline" size="sm" className="w-full" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout

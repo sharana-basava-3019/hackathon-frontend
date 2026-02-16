@@ -1,4 +1,4 @@
-import { FileText, Download, Bookmark, Star, BookOpen, FileQuestion, ClipboardList, BookMarked } from 'lucide-react';
+import { FileText, Download, Bookmark, Star, BookOpen, FileQuestion, ClipboardList, BookMarked, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,8 @@ interface ResourceCardProps {
 const ResourceCard = ({ resource, onDownload, onBookmark }: ResourceCardProps) => {
   const navigate = useNavigate();
 
+  const visibility = resource.visibility ?? 'public';
+
   return (
     <Card className="group cursor-pointer transition-all hover:shadow-md border-border bg-card" onClick={() => navigate(`/resources/${resource.id}`)}>
       <CardContent className="p-5">
@@ -44,9 +46,19 @@ const ResourceCard = ({ resource, onDownload, onBookmark }: ResourceCardProps) =
           <Badge variant="secondary" className="text-xs">{resource.branch}</Badge>
           <Badge variant="secondary" className="text-xs">Sem {resource.semester}</Badge>
           <Badge variant="outline" className="text-xs capitalize">{resource.type}</Badge>
+          <Badge
+            variant={visibility === 'private' ? 'destructive' : 'secondary'}
+            className="text-xs capitalize"
+          >
+            {visibility === 'private' ? 'Private' : 'Public'}
+          </Badge>
         </div>
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
+        <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+          <p className="truncate">Uploaded by <span className="font-medium text-foreground">{resource.uploadedBy?.name || 'Unknown'}</span></p>
+        </div>
+
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
             <span className="flex items-center gap-1">
               <Star className="h-3.5 w-3.5 fill-primary text-primary" />
@@ -58,6 +70,15 @@ const ResourceCard = ({ resource, onDownload, onBookmark }: ResourceCardProps) =
             </span>
           </div>
           <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 px-2 text-xs"
+              onClick={() => navigate(`/resources/${resource.id}`)}
+            >
+              <Eye className="mr-1 h-3 w-3" />
+              View
+            </Button>
             <Button
               variant="ghost"
               size="icon"

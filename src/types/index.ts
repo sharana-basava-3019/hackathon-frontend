@@ -29,6 +29,8 @@ export interface Resource {
   semester: number;
   type: 'notes' | 'paper' | 'assignment' | 'book' | 'other';
   description: string;
+  // Visibility is optional so existing mock/API data stays compatible
+  visibility?: 'public' | 'private';
   fileUrl: string;
   fileName: string;
   fileSize: number;
