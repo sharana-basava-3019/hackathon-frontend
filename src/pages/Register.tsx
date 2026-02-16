@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api } from '@/services/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,16 +12,14 @@ const branches = ['Computer Science', 'Electronics', 'Mechanical', 'Civil', 'Ele
 const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const Register = () => {
-  const [form, setForm] = useState({
-    name: '', email: '', branch: '', semester: '', password: '', confirmPassword: '',
-  });
+  const [form, setForm] = useState({ name: '', email: '', branch: '', semester: '', password: '', confirmPassword: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const { name, email, branch, semester, password, confirmPassword } = form;
 
@@ -40,19 +37,11 @@ const Register = () => {
     }
 
     setLoading(true);
-    try {
-      await api.register({ name, email, branch, semester: parseInt(semester), password });
+    setTimeout(() => {
       toast({ title: 'Registration Successful', description: 'Please login with your credentials.' });
       navigate('/login');
-    } catch (err: unknown) {
-      toast({
-        title: 'Registration Failed',
-        description: err instanceof Error ? err.message : 'Something went wrong',
-        variant: 'destructive',
-      });
-    } finally {
       setLoading(false);
-    }
+    }, 500);
   };
 
   return (
@@ -80,18 +69,14 @@ const Register = () => {
                 <Label>Branch</Label>
                 <Select value={form.branch} onValueChange={(v) => update('branch', v)} disabled={loading}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>
-                    {branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent>{branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label>Semester</Label>
                 <Select value={form.semester} onValueChange={(v) => update('semester', v)} disabled={loading}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>
-                    {semesters.map((s) => <SelectItem key={s} value={s.toString()}>Semester {s}</SelectItem>)}
-                  </SelectContent>
+                  <SelectContent>{semesters.map((s) => <SelectItem key={s} value={s.toString()}>Semester {s}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>

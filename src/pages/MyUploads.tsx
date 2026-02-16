@@ -1,9 +1,7 @@
-import { useState, useEffect } from 'react';
-import { api } from '@/services/api';
+import { useState } from 'react';
+import { mockResources, mockUser } from '@/data/mockData';
 import type { Resource } from '@/types';
 import AppLayout from '@/components/AppLayout';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import ErrorMessage from '@/components/ErrorMessage';
 import EmptyState from '@/components/EmptyState';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,47 +10,18 @@ import { Trash2, Edit, FolderOpen, Star, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 
 const MyUploads = () => {
-  const [uploads, setUploads] = useState<Resource[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [uploads, setUploads] = useState<Resource[]>(mockResources.filter(r => r.uploadedBy.id === mockUser.id));
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const fetchUploads = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await api.getMyUploads();
-      setUploads(res);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load uploads');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchUploads(); }, []);
-
-  const handleDelete = async (id: string) => {
-    try {
-      await api.deleteResource(id);
-      setUploads((prev) => prev.filter((r) => r.id !== id));
-      toast({ title: 'Resource deleted' });
-    } catch (err: unknown) {
-      toast({ title: 'Delete failed', description: err instanceof Error ? err.message : '', variant: 'destructive' });
-    }
+  const handleDelete = (id: string) => {
+    setUploads((prev) => prev.filter((r) => r.id !== id));
+    toast({ title: 'Resource deleted' });
   };
 
   return (
@@ -66,11 +35,7 @@ const MyUploads = () => {
           <Button onClick={() => navigate('/upload')}>Upload New</Button>
         </div>
 
-        {loading ? (
-          <LoadingSpinner message="Loading your uploads..." />
-        ) : error ? (
-          <ErrorMessage message={error} onRetry={fetchUploads} />
-        ) : uploads.length === 0 ? (
+        {uploads.length === 0 ? (
           <EmptyState
             icon={<FolderOpen className="h-16 w-16" />}
             title="No uploads yet"

@@ -1,6 +1,5 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api } from '@/services/api';
 import AppLayout from '@/components/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,49 +26,35 @@ const UploadResource = () => {
 
   const update = (key: string, value: string) => setForm((p) => ({ ...p, [key]: value }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const { title, subject, branch, semester, type, description } = form;
+    const { title, subject, branch, semester, type } = form;
 
     if (!title || !subject || !branch || !semester || !type || !file) {
       toast({ title: 'Validation Error', description: 'Please fill all required fields and select a file.', variant: 'destructive' });
       return;
     }
 
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('subject', subject);
-    formData.append('branch', branch);
-    formData.append('semester', semester);
-    formData.append('type', type);
-    formData.append('description', description);
-    formData.append('file', file);
-
     setLoading(true);
     setProgress(0);
 
-    // Simulate progress
     const interval = setInterval(() => {
-      setProgress((p) => Math.min(p + 10, 90));
-    }, 300);
+      setProgress((p) => {
+        if (p >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        return p + 10;
+      });
+    }, 200);
 
-    try {
-      await api.uploadResource(formData);
-      setProgress(100);
+    setTimeout(() => {
       clearInterval(interval);
+      setProgress(100);
       toast({ title: 'Upload Successful', description: 'Your resource has been shared!' });
       navigate('/my-uploads');
-    } catch (err: unknown) {
-      clearInterval(interval);
-      setProgress(0);
-      toast({
-        title: 'Upload Failed',
-        description: err instanceof Error ? err.message : 'Something went wrong',
-        variant: 'destructive',
-      });
-    } finally {
       setLoading(false);
-    }
+    }, 2500);
   };
 
   return (
@@ -97,27 +82,21 @@ const UploadResource = () => {
                   <Label>Branch *</Label>
                   <Select value={form.branch} onValueChange={(v) => update('branch', v)} disabled={loading}>
                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>
-                      {branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent>{branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Semester *</Label>
                   <Select value={form.semester} onValueChange={(v) => update('semester', v)} disabled={loading}>
                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>
-                      {semesters.map((s) => <SelectItem key={s} value={s.toString()}>Sem {s}</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent>{semesters.map((s) => <SelectItem key={s} value={s.toString()}>Sem {s}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Type *</Label>
                   <Select value={form.type} onValueChange={(v) => update('type', v)} disabled={loading}>
                     <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                    <SelectContent>
-                      {resourceTypes.map((t) => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent>{resourceTypes.map((t) => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </div>
@@ -127,14 +106,9 @@ const UploadResource = () => {
               </div>
               <div className="space-y-2">
                 <Label>File *</Label>
-                <div
-                  className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
-                  onClick={() => fileRef.current?.click()}
-                >
+                <div className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors" onClick={() => fileRef.current?.click()}>
                   <FileUp className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    {file ? file.name : 'Click to select a file'}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{file ? file.name : 'Click to select a file'}</p>
                   {file && <p className="text-xs text-muted-foreground mt-1">{(file.size / 1024 / 1024).toFixed(2)} MB</p>}
                 </div>
                 <input ref={fileRef} type="file" className="hidden" onChange={(e) => setFile(e.target.files?.[0] || null)} />
