@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { registerUser } from '@/services/authService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,39 +11,101 @@ import { GraduationCap, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const branches = ['Computer Science', 'Electronics', 'Mechanical', 'Civil', 'Electrical', 'Information Technology'];
-const semesters = [1, 2, 3, 4, 5, 6, 7, 8];
+const years = [2020, 2021, 2022, 2023, 2024, 2025, 2026];
 
 const Register = () => {
-  const [form, setForm] = useState({ name: '', email: '', branch: '', semester: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({ 
+    name: '', 
+    email: '', 
+    branch: '', 
+    year: '', 
+    password: '', 
+    confirmPassword: '' 
+  });
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { name, email, branch, semester, password, confirmPassword } = form;
+    const { name, email, branch, year, password, confirmPassword } = form;
 
-    if (!name || !email || !branch || !semester || !password) {
-      toast({ title: 'Validation Error', description: 'All fields are required.', variant: 'destructive' });
+    // Validation
+    if (!name || !email || !branch || !year || !password) {
+      toast({ 
+        title: 'Validation Error', 
+        description: 'All fields are required.', 
+        variant: 'destructive' 
+      });
       return;
     }
+    
     if (password.length < 6) {
-      toast({ title: 'Validation Error', description: 'Password must be at least 6 characters.', variant: 'destructive' });
+      toast({ 
+        title: 'Validation Error', 
+        description: 'Password must be at least 6 characters.', 
+        variant: 'destructive' 
+      });
       return;
     }
+    
     if (password !== confirmPassword) {
-      toast({ title: 'Validation Error', description: 'Passwords do not match.', variant: 'destructive' });
+      toast({ 
+        title: 'Validation Error', 
+        description: 'Passwords do not match.', 
+        variant: 'destructive' 
+      });
       return;
     }
 
     setLoading(true);
-    setTimeout(() => {
-      toast({ title: 'Registration Successful', description: 'Please login with your credentials.' });
-      navigate('/login');
+
+    try {
+      const response = await registerUser({
+        name,
+        email,
+        password,
+        college_id: 1, // Default college - you can add a college selector later
+        class_name: branch, // Map branch to class_name
+        year: parseInt(year), // Map year to year
+      });
+
+      if (response.success && response.data) {
+        // Auto-login after successful registration
+        login(response.data.token, response.data.user);
+        toast({ 
+          title: 'Registration Successful', 
+          description: `Welcome, ${response.data.user.name}!` 
+        });
+        navigate('/dashboard');
+      } else {
+        // Handle API error response
+        let errorMessage = response.error || 'Registration failed';
+        
+        // Check for validation errors
+        if (response.errors && response.errors.length > 0) {
+          errorMessage = response.errors.map(err => err.msg).join(', ');
+        }
+        
+        toast({ 
+          title: 'Registration Failed', 
+          description: errorMessage, 
+          variant: 'destructive' 
+        });
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Unable to connect to server. Please try again.', 
+        variant: 'destructive' 
+      });
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -58,35 +122,71 @@ const Register = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="John Doe" value={form.name} onChange={(e) => update('name', e.target.value)} disabled={loading} />
+              <Input 
+                id="name" 
+                placeholder="John Doe" 
+                value={form.name} 
+                onChange={(e) => update('name', e.target.value)} 
+                disabled={loading}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="you@college.edu" value={form.email} onChange={(e) => update('email', e.target.value)} disabled={loading} />
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="you@college.edu" 
+                value={form.email} 
+                onChange={(e) => update('email', e.target.value)} 
+                disabled={loading}
+                required
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Branch</Label>
+                <Label>Branch/Class</Label>
                 <Select value={form.branch} onValueChange={(v) => update('branch', v)} disabled={loading}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {branches.map((b) => <SelectItem key={b} value={b}>{b}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Semester</Label>
-                <Select value={form.semester} onValueChange={(v) => update('semester', v)} disabled={loading}>
+                <Label>Year</Label>
+                <Select value={form.year} onValueChange={(v) => update('year', v)} disabled={loading}>
                   <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{semesters.map((s) => <SelectItem key={s} value={s.toString()}>Semester {s}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    {years.map((y) => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" value={form.password} onChange={(e) => update('password', e.target.value)} disabled={loading} />
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                value={form.password} 
+                onChange={(e) => update('password', e.target.value)} 
+                disabled={loading}
+                required
+                minLength={6}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input id="confirmPassword" type="password" placeholder="••••••••" value={form.confirmPassword} onChange={(e) => update('confirmPassword', e.target.value)} disabled={loading} />
+              <Input 
+                id="confirmPassword" 
+                type="password" 
+                placeholder="••••••••" 
+                value={form.confirmPassword} 
+                onChange={(e) => update('confirmPassword', e.target.value)} 
+                disabled={loading}
+                required
+              />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
