@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { api } from '@/services/api';
+import { mockUser } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,27 +17,19 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       toast({ title: 'Validation Error', description: 'Please fill in all fields.', variant: 'destructive' });
       return;
     }
     setLoading(true);
-    try {
-      const res = await api.login(email, password);
-      login(res.token, res.user);
-      toast({ title: 'Welcome back!', description: `Logged in as ${res.user.name}` });
+    setTimeout(() => {
+      login('mock-token', mockUser);
+      toast({ title: 'Welcome back!', description: `Logged in as ${mockUser.name}` });
       navigate('/dashboard');
-    } catch (err: unknown) {
-      toast({
-        title: 'Login Failed',
-        description: err instanceof Error ? err.message : 'Invalid credentials',
-        variant: 'destructive',
-      });
-    } finally {
       setLoading(false);
-    }
+    }, 500);
   };
 
   return (
@@ -54,25 +46,11 @@ const Login = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email / College ID</Label>
-              <Input
-                id="email"
-                type="text"
-                placeholder="you@college.edu"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-              />
+              <Input id="email" type="text" placeholder="you@college.edu" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-              />
+              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
@@ -81,9 +59,7 @@ const Login = () => {
           </form>
           <p className="text-center text-sm text-muted-foreground mt-4">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary font-medium hover:underline">
-              Register
-            </Link>
+            <Link to="/register" className="text-primary font-medium hover:underline">Register</Link>
           </p>
         </CardContent>
       </Card>
