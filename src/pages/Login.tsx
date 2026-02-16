@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { mockUser } from '@/data/mockData';
+import { loginUser } from '@/services/authService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,19 +17,49 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!email.trim() || !password.trim()) {
-      toast({ title: 'Validation Error', description: 'Please fill in all fields.', variant: 'destructive' });
+      toast({ 
+        title: 'Validation Error', 
+        description: 'Please fill in all fields.', 
+        variant: 'destructive' 
+      });
       return;
     }
+    
     setLoading(true);
-    setTimeout(() => {
-      login('mock-token', mockUser);
-      toast({ title: 'Welcome back!', description: `Logged in as ${mockUser.name}` });
-      navigate('/dashboard');
+    
+    try {
+      const response = await loginUser({ email, password });
+      
+      if (response.success && response.data) {
+        login(response.data.token, response.data.user);
+        toast({ 
+          title: 'Welcome back!', 
+          description: `Logged in as ${response.data.user.name}` 
+        });
+        navigate('/dashboard');
+      } else {
+        // Handle API error response
+        const errorMessage = response.error || 'Login failed';
+        toast({ 
+          title: 'Login Failed', 
+          description: errorMessage, 
+          variant: 'destructive' 
+        });
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Unable to connect to server. Please try again.', 
+        variant: 'destructive' 
+      });
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -45,12 +75,28 @@ const Login = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email / College ID</Label>
-              <Input id="email" type="text" placeholder="you@college.edu" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading} />
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="you@college.edu" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                disabled={loading}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} disabled={loading} />
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                disabled={loading}
+                required
+              />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}

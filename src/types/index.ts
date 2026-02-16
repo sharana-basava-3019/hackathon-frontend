@@ -1,12 +1,24 @@
+// Backend User structure
 export interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
-  branch: string;
-  semester: number;
+  college_id: number;
+  college_name?: string;
+  college_code?: string;
+  class_name: string | null;
+  year: number | null;
+  profile_picture: string | null;
+  bio: string | null;
+  is_active?: boolean;
+  created_at: string;
+  updated_at?: string;
+  // Legacy fields for compatibility
+  branch?: string;
+  semester?: number;
   avatar?: string;
-  contributionPoints: number;
-  createdAt: string;
+  contributionPoints?: number;
+  createdAt?: string;
 }
 
 export interface Resource {
@@ -61,8 +73,18 @@ export interface PaginatedResponse<T> {
 }
 
 export interface AuthResponse {
-  token: string;
-  user: User;
+  success: boolean;
+  message?: string;
+  data?: {
+    token: string;
+    user: User;
+  };
+  error?: string;
+  errors?: Array<{
+    msg: string;
+    param: string;
+    location: string;
+  }>;
 }
 
 export interface ResourceFilters {
