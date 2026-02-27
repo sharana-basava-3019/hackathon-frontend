@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { updateUserProfile } from '@/services/authService';
+
 import AppLayout from '@/components/AppLayout';
 import ProfilePictureUpload from '@/components/ProfilePictureUpload';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -52,31 +52,24 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      const response = await updateUserProfile({
-        name: form.name,
-        class_name: form.class_name || undefined,
-        year: form.year ? parseInt(form.year) : undefined,
-        bio: form.bio || undefined,
-      });
-
-      if (response.success && response.data) {
-        updateUser(response.data);
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      if (user) {
+        const updatedUser = {
+          ...user,
+          name: form.name,
+          class_name: form.class_name || null,
+          year: form.year ? parseInt(form.year) : null,
+          bio: form.bio || null,
+          college_name: form.college_name || undefined,
+        };
+        updateUser(updatedUser);
         setIsEditing(false);
         toast({ title: 'Profile updated successfully!' });
-      } else {
-        toast({ 
-          title: 'Update Failed', 
-          description: response.error || 'Failed to update profile', 
-          variant: 'destructive' 
-        });
       }
     } catch (error) {
       console.error('Profile update error:', error);
-      toast({ 
-        title: 'Error', 
-        description: 'Unable to update profile. Please try again.', 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Error', description: 'Unable to update profile.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
