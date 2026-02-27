@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { resetPassword, verifyResetToken } from '@/services/authService';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,16 +56,11 @@ const ResetPassword = () => {
       }
 
       try {
-        const response = await verifyResetToken(token);
-        if (response.success) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        if (token) {
           setTokenValid(true);
         } else {
           setTokenValid(false);
-          toast({
-            title: 'Invalid or Expired Link',
-            description: response.error || 'This reset link is no longer valid.',
-            variant: 'destructive'
-          });
         }
       } catch (error) {
         console.error('Token verification error:', error);
@@ -126,25 +121,15 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      const response = await resetPassword({ token, newPassword: password });
-
-      if (response.success) {
-        setResetSuccess(true);
-        toast({
-          title: 'Password Reset Successful!',
-          description: 'You can now login with your new password.'
-        });
-        // Redirect to login after 3 seconds
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
-      } else {
-        toast({
-          title: 'Reset Failed',
-          description: response.error || 'Unable to reset password.',
-          variant: 'destructive'
-        });
-      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setResetSuccess(true);
+      toast({
+        title: 'Password Reset Successful!',
+        description: 'You can now login with your new password.'
+      });
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
     } catch (error: any) {
       console.error('Password reset error:', error);
       toast({

@@ -1,21 +1,28 @@
 import type { User, Resource, Comment, DashboardData, LeaderboardEntry } from '@/types';
 
 export const mockUser: User = {
-  id: '1',
+  id: 1,
   name: 'Rahul Sharma',
   email: 'rahul@college.edu',
+  college_id: 1,
+  college_name: 'ABC Engineering College',
+  class_name: 'CS-A',
+  year: 3,
+  profile_picture: null,
+  bio: null,
   branch: 'Computer Science',
   semester: 5,
   contributionPoints: 245,
+  created_at: '2025-08-15T10:00:00Z',
   createdAt: '2025-08-15T10:00:00Z',
 };
 
 const mockUsers: User[] = [
   mockUser,
-  { id: '2', name: 'Priya Patel', email: 'priya@college.edu', branch: 'Electronics', semester: 4, contributionPoints: 320, createdAt: '2025-07-10T10:00:00Z' },
-  { id: '3', name: 'Amit Kumar', email: 'amit@college.edu', branch: 'Mechanical', semester: 6, contributionPoints: 180, createdAt: '2025-09-01T10:00:00Z' },
-  { id: '4', name: 'Sneha Reddy', email: 'sneha@college.edu', branch: 'Computer Science', semester: 3, contributionPoints: 410, createdAt: '2025-06-20T10:00:00Z' },
-  { id: '5', name: 'Vikram Singh', email: 'vikram@college.edu', branch: 'Information Technology', semester: 7, contributionPoints: 290, createdAt: '2025-05-15T10:00:00Z' },
+  { id: 2, name: 'Priya Patel', email: 'priya@college.edu', college_id: 1, class_name: null, year: 2, profile_picture: null, bio: null, created_at: '2025-07-10T10:00:00Z', branch: 'Electronics', semester: 4, contributionPoints: 320, createdAt: '2025-07-10T10:00:00Z' },
+  { id: 3, name: 'Amit Kumar', email: 'amit@college.edu', college_id: 1, class_name: null, year: 3, profile_picture: null, bio: null, created_at: '2025-09-01T10:00:00Z', branch: 'Mechanical', semester: 6, contributionPoints: 180, createdAt: '2025-09-01T10:00:00Z' },
+  { id: 4, name: 'Sneha Reddy', email: 'sneha@college.edu', college_id: 1, class_name: null, year: 2, profile_picture: null, bio: null, created_at: '2025-06-20T10:00:00Z', branch: 'Computer Science', semester: 3, contributionPoints: 410, createdAt: '2025-06-20T10:00:00Z' },
+  { id: 5, name: 'Vikram Singh', email: 'vikram@college.edu', college_id: 1, class_name: null, year: 4, profile_picture: null, bio: null, created_at: '2025-05-15T10:00:00Z', branch: 'Information Technology', semester: 7, contributionPoints: 290, createdAt: '2025-05-15T10:00:00Z' },
 ];
 
 export const mockResources: Resource[] = [
